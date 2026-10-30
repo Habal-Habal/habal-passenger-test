@@ -329,26 +329,27 @@ testRideButton.addEventListener(
 
         return;
       }
-
-      const { data, error } =
-        await supabase.functions.invoke(
-          "rapid-action",
-          {
-            body: {
-              pickup: {
-                latitude: 8.4400,
-                longitude: 123.3400
-              },
-              destination: {
-                latitude: 8.4500,
-                longitude: 123.3500
-              },
-              fare_rule_id:
-                TEST_FARE_RULE_ID
-            }
-          }
-        );
-
+const { data, error } =
+  await supabase.functions.invoke(
+    "rapid-action",
+    {
+      headers: {
+        Authorization:
+          "Bearer " + session.access_token
+      },
+      body: {
+        pickup: {
+          latitude: 8.4400,
+          longitude: 123.3400
+        },
+        destination: {
+          latitude: 8.4500,
+          longitude: 123.3500
+        },
+        fare_rule_id: TEST_FARE_RULE_ID
+      }
+    }
+  );
       if (error) {
 
         let message = error.message;
