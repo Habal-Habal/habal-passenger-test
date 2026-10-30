@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Habal Passenger Login</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #eaf8ee;
+    text-align: center;
+    padding: 35px 20px;
+    margin: 0;
+  }
+  h1 {
+    color: #148b43;
+    font-size: 48px;
+    margin-bottom: 5px;
+  }
+  .card {
+    background: white;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 4px 15px #0001;
+    max-width: 400px;
+    margin: 30px auto;
+  }
+  input, button {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 15px;
+    margin-top: 12px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+  input { border: 1px solid #ccc; }
+  button {
+    background: #148b43;
+    color: white;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .6; }
+  #status { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+
+<h1>🏍️ Habal</h1>
+<p>Habal na!</p>
+
+<div class="card">
+  <h2>Passenger Login</h2>
+
+  <form id="loginForm">
+    <input id="email" type="email"
+           placeholder="Email" required
+           autocomplete="username">
+
+    <input id="password" type="password"
+           placeholder="Password" required
+           autocomplete="current-password">
+
+    <button id="loginButton" type="submit">
+      Log In
+    </button>
+  </form>
+
+  <button id="logoutButton" type="button" hidden>
+    Log Out
+  </button>
+
+  <p id="status" role="status">Not logged in</p>
+</div>
+
+<script type="module">
+import { createClient } from
+  "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL =
+  "https://ktjpvzdslzlctlmgsnst.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_dM4aZBmzSr5aJ7-Z03Yuzg_bTEWbngc";
+
+const status = document.getElementById("status");
+const form = document.getElementById("loginForm");
+const loginButton = document.getElementById("loginButton");
+const logoutButton = document.getElementById("logoutButton");
+
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
+  }
+);
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  loginButton.disabled = true;
+  status.textContent = "Logging in...";
+
+  try {
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    document.getElementById("password").value = "";
+
+    if (error) {
+      status.textContent = "Login failed: " + error.message;
+      return;
+    }
+
+    if (data.user.id !==
+        "a142d81d-24fb-4d5d-a26d-8b47eacc96c4") {
+      await supabase.auth.signOut();
+      status.textContent =
+        "This is not the expected test passenger.";
+      return;
+    }
+
+    status.textContent = "Login successful!";
+    form.hidden = true;
+    logoutButton.hidden = false;
+
+  } catch (error) {
+    status.textContent =
+      "Connection error: " + error.message;
+  } finally {
+    loginButton.disabled = false;
+  }
+});
+
+logoutButton.addEventListener("click", async () => {
+  await supabase.auth.signOut();
+  form.hidden = false;
+  logoutButton.hidden = true;
+  status.textContent = "Logged out";
+});
+</script>
+</body>
+</html>
