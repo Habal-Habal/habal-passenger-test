@@ -2,401 +2,914 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Habal Passenger Test</title>
- 
-<style>
-  * {
-    box-sizing: border-box;
-  }
- 
-  body {
-    font-family: Arial, sans-serif;
-    background: #eaf8ee;
-    text-align: center;
-    padding: 35px 20px;
-    margin: 0;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>Habal Passenger</title>
 
-  h1 {
-    color: #148b43;
-    font-size: 48px;
-    margin-bottom: 5px;
-  }
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-  .card {
-    background: white;
-    padding: 25px;
-    border-radius: 18px;
-    box-shadow: 0 4px 15px #0001;
-    max-width: 420px;
-    margin: 30px auto;
-  }
+  <style>
+    * { box-sizing: border-box; }
 
-  input, button {
-    width: 100%;
-    padding: 15px;
-    margin-top: 12px;
-    border-radius: 10px;
-    font-size: 16px;
-  }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eaf8ee;
+      color: #17251c;
+    }
 
-  input {
-    border: 1px solid #ccc;
-  }
+    header {
+      background: #148b47;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
 
-  button {
-    background: #148b43;
-    color: white;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-  }
+    header h1 {
+      margin: 0;
+      font-size: 34px;
+    }
 
-  button:disabled {
-    opacity: 0.6;
-  }
+    header p {
+      margin: 6px 0 0;
+    }
 
-  .secondary {
-    background: #555;
-  }
+    main {
+      max-width: 650px;
+      margin: auto;
+      padding: 16px;
+    }
 
-  .status {
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-    line-height: 1.5;
-  }
+    .card {
+      background: white;
+      padding: 18px;
+      border-radius: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 3px 15px #0000000d;
+    }
 
-  [hidden] {
-    display: none !important;
-  }
-</style>
+    h2 {
+      font-size: 21px;
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      font-size: 16px;
+      border: 1px solid #ccd9d0;
+      border-radius: 10px;
+    }
+
+    button {
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .green {
+      background: #148b47;
+      color: white;
+    }
+
+    .gray {
+      background: #e9eeeb;
+      color: #24342a;
+    }
+
+    .full {
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .row button {
+      flex: 1;
+    }
+
+    #map {
+      height: 370px;
+      border-radius: 12px;
+      margin-top: 12px;
+      z-index: 0;
+    }
+
+    .hint {
+      color: #526459;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f0f7f2;
+      border-radius: 10px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .result {
+      border-left: 4px solid #148b47;
+      padding: 12px;
+      background: #f0f7f2;
+      border-radius: 8px;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .place {
+      width: 100%;
+      display: block;
+      text-align: left;
+      background: #f2f6f3;
+      margin-top: 6px;
+      font-weight: normal;
+      line-height: 1.4;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #526459;
+    }
+  </style>
 </head>
 
 <body>
+  <header>
+    <h1>🏍️ Habal</h1>
+    <p>Habal na! — Katipunan Passenger Test</p>
+  </header>
 
-<h1>🏍️ Habal</h1>
-<p>Habal na!</p>
+  <main>
+    <section id="loginSection" class="card">
+      <h2>Passenger Login</h2>
 
-<div class="card">
+      <form id="loginForm">
+        <label for="email">Email</label>
+        <input id="email" type="email"
+               autocomplete="username" required>
 
-  <h2>Passenger Login</h2>
+        <label for="password">Password</label>
+        <input id="password" type="password"
+               autocomplete="current-password" required>
 
-  <form id="loginForm">
+        <button id="loginBtn"
+                class="green full" type="submit">
+          Log In
+        </button>
+      </form>
 
-    <input
-      id="email"
-      type="email"
-      placeholder="Email"
-      autocomplete="username"
-      required
-    >
+      <div id="loginMessage"
+           class="status" role="status">
+        Log in to continue.
+      </div>
+    </section>
 
-    <input
-      id="password"
-      type="password"
-      placeholder="Password"
-      autocomplete="current-password"
-      required
-    >
+    <section id="appSection" class="hidden">
+      <div class="card">
+        <h2>Welcome, Passenger!</h2>
+        <p class="hint">
+          Choose your pickup and destination
+          using the map or address search.
+        </p>
 
-    <button id="loginButton" type="submit">
-      Log In
-    </button>
+        <button id="logoutBtn"
+                class="gray full">
+          Log Out
+        </button>
+      </div>
 
-  </form>
+      <div class="card">
+        <h2>📍 Find a Location</h2>
 
-  <p id="status" class="status" role="status">
-    Not logged in
-  </p>
+        <label for="searchInput">
+          Search address or landmark
+        </label>
+        <input id="searchInput"
+          placeholder="e.g. Katipunan, Zamboanga del Norte">
 
-  <div id="passengerPanel" hidden>
+        <div class="row">
+          <button id="searchBtn"
+                  class="green">
+            Search
+          </button>
 
-    <h3>Welcome, Passenger!</h3>
+          <button id="gpsBtn"
+                  class="gray">
+            Use My GPS
+          </button>
+        </div>
 
-    <p>Test route: Katipunan area</p>
+        <div id="searchResults"></div>
 
-    <button id="testRideButton" type="button">
-      🏍️ Test Ride Booking
-    </button>
+        <p class="hint">
+          Search results depend on OpenStreetMap
+          coverage. Some local businesses may
+          not appear.
+        </p>
+      </div>
 
-    <p id="rideStatus"
-       class="status"
-       role="status"></p>
+      <div class="card">
+        <h2>🗺️ Select Your Ride</h2>
 
-    <button
-      id="logoutButton"
-      type="button"
-      class="secondary">
-      Log Out
-    </button>
+        <div class="row">
+          <button id="pickupMode"
+                  class="green">
+            📍 Set Pickup
+          </button>
 
-  </div>
+          <button id="destinationMode"
+                  class="gray">
+            🏁 Set Destination
+          </button>
+        </div>
 
-</div>
+        <p id="modeText" class="hint">
+          Tap the map to set your pickup.
+        </p>
 
-<script type="module">
+        <div id="map"></div>
 
-import { createClient } from
-  "https://esm.sh/@supabase/supabase-js@2";
+        <p class="hint">
+          Green marker = pickup.
+          Red marker = destination.
+          Markers can also be dragged.
+          The connecting line is not a road route.
+        </p>
+      </div>
 
-const SUPABASE_URL =
-  "https://ktjpvzdslzlctlmgsnst.supabase.co";
+      <div class="card">
+        <h2>🏍️ Your Trip</h2>
 
-// Public client key only.
-// Never use a secret or service_role key here.
-const SUPABASE_KEY =
-  "sb_publishable_dM4aZBmzSr5aJ7-Z03Yuzg_bTEWbngc";
+        <label>Pickup</label>
+        <div id="pickupDisplay"
+             class="status">
+          Not selected
+        </div>
 
-const TEST_PASSENGER_ID =
-  "a142d81d-24fb-4d5d-a26d-8b47eacc96c4";
+        <label>Destination</label>
+        <div id="destinationDisplay"
+             class="status">
+          Not selected
+        </div>
 
-const TEST_FARE_RULE_ID =
-  "42870dda-fc66-42c7-92fc-d1a73f966196";
+        <p class="hint">
+          Your road distance and test fare will
+          be calculated by the server when you
+          submit the booking.
+        </p>
 
-const loginForm =
-  document.getElementById("loginForm");
+        <button id="bookBtn"
+                class="green full">
+          🏍️ Book Habal
+        </button>
 
-const loginButton =
-  document.getElementById("loginButton");
+        <div id="bookingStatus"
+             class="status" role="status">
+          Ready to book.
+        </div>
 
-const passengerPanel =
-  document.getElementById("passengerPanel");
+        <div id="bookingResult"
+             class="hidden result"></div>
+      </div>
 
-const testRideButton =
-  document.getElementById("testRideButton");
+      <p class="small">
+        Map data © OpenStreetMap contributors.
+        Address search powered by Nominatim.
+        Prototype for authorized testing only.
+      </p>
+    </section>
+  </main>
 
-const logoutButton =
-  document.getElementById("logoutButton");
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+  </script>
 
-const statusElement =
-  document.getElementById("status");
+  <script type="module">
+    import { createClient } from
+      "https://esm.sh/@supabase/supabase-js@2";
 
-const rideStatus =
-  document.getElementById("rideStatus");
+    // CONFIGURATION
+    const SUPABASE_URL =
+      "https://ktjpvzdslzlctlmgsnst.supabase.co";
 
-const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false
-    }
-  }
-);
+    // REPLACE ONLY THIS PLACEHOLDER
+    // WITH YOUR EXISTING PUBLISHABLE KEY.
+    const SUPABASE_KEY =
+     "sb_publishable_dM4aZBmzSr5aJ7-Z03Yuzg_bTEWbngc";
 
-function setLoggedIn(loggedIn) {
-  loginForm.hidden = loggedIn;
-  passengerPanel.hidden = !loggedIn;
+    const TEST_PASSENGER_ID =
+      "a142d81d-24fb-4d5d-a26d-8b47eacc96c4";
 
-  if (!loggedIn) {
-    rideStatus.textContent = "";
-    testRideButton.disabled = false;
-  }
-}
+    const TEST_FARE_RULE_ID =
+      "42870dda-fc66-42c7-92fc-d1a73f966196";
 
-setLoggedIn(false);
+    // Keep the endpoint that worked in
+    // our successful booking test.
+    const FUNCTION_NAME = "rapid-action";
 
-// PASSENGER LOGIN
-loginForm.addEventListener(
-  "submit",
-  async (event) => {
-
-    event.preventDefault();
-
-    loginButton.disabled = true;
-    statusElement.textContent = "Logging in...";
-
-    try {
-
-      const email =
-        document.getElementById("email")
-          .value.trim();
-
-      const passwordInput =
-        document.getElementById("password");
-
-      const password = passwordInput.value;
-
-      const { data, error } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-      passwordInput.value = "";
-
-      if (error) {
-        statusElement.textContent =
-          "Login failed: " + error.message;
-        return;
+    const supabase = createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false
+        }
       }
-
-      if (data.user.id !== TEST_PASSENGER_ID) {
-        await supabase.auth.signOut();
-
-        statusElement.textContent =
-          "This is not the expected test passenger.";
-
-        return;
-      }
-
-      setLoggedIn(true);
-
-      statusElement.textContent =
-        "Login successful!";
-
-    } catch (error) {
-
-      statusElement.textContent =
-        "Connection error: " + error.message;
-
-    } finally {
-
-      loginButton.disabled = false;
-
-    }
-  }
-);
-
-// LOG OUT
-logoutButton.addEventListener(
-  "click",
-  async () => {
-
-    logoutButton.disabled = true;
-
-    try {
-      await supabase.auth.signOut();
-    } finally {
-      setLoggedIn(false);
-
-      statusElement.textContent =
-        "Logged out";
-
-      logoutButton.disabled = false;
-    }
-  }
-);
-
-// TEST BOOKING
-testRideButton.addEventListener(
-  "click",
-  async () => {
-
-    const confirmed = confirm(
-      "Create ONE test ride?\n\n" +
-      "This saves a test booking in Supabase. " +
-      "No payment will be collected."
     );
 
-    if (!confirmed) return;
+    const $ = id => document.getElementById(id);
 
-    testRideButton.disabled = true;
+    // Our previously verified Katipunan points.
+    const DEFAULT_PICKUP = {
+      latitude: 8.5118171,
+      longitude: 123.2831666
+    };
 
-    rideStatus.textContent =
-      "Calculating road distance...";
+    const DEFAULT_DESTINATION = {
+      latitude: 8.5048293,
+      longitude: 123.3003836
+    };
 
-    try {
+    let pickup = null;
+    let destination = null;
+    let mode = "pickup";
+    let map = null;
+    let pickupMarker = null;
+    let destinationMarker = null;
+    let connectionLine = null;
+    let lastSearchAt = 0;
+    let searchBusy = false;
+    let bookingBusy = false;
 
-      const {
-        data: { session },
-        error: sessionError
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-
-        rideStatus.textContent =
-          "Session expired. Log in again.";
-
-        return;
-      }
-
-      const {
-        data: userData,
-        error: userError
-      } = await supabase.auth.getUser();
-
-      if (
-        userError ||
-        userData?.user?.id !== TEST_PASSENGER_ID
-      ) {
-
-        rideStatus.textContent =
-          "Passenger authentication failed.";
-
-        return;
-      }
-const { data, error } =
-  await supabase.functions.invoke(
-    "rapid-action",
-    {
-      headers: {
-        Authorization:
-          "Bearer " + session.access_token
-      },
-      body: {
-        pickup: {
-          latitude: 8.5118171,
-          longitude: 123.2831666
-        },
-        destination: {
-          latitude: 8.5048293,
-          longitude: 123.3003836
-        },
-        fare_rule_id: TEST_FARE_RULE_ID
-      }
+    function setStatus(message) {
+      $("bookingStatus").textContent = message;
     }
-  );
-      if (error) {
 
-        let message = error.message;
+    function formatPoint(point) {
+      return point.latitude.toFixed(7) +
+        ", " + point.longitude.toFixed(7);
+    }
 
-        if (error.context) {
-          try {
-            const response =
-              await error.context.json();
+    function setMode(nextMode) {
+      mode = nextMode;
 
-            message = JSON.stringify(response);
-          } catch {
-            // Keep the original error message.
-          }
+      $("pickupMode").className =
+        mode === "pickup" ? "green" : "gray";
+
+      $("destinationMode").className =
+        mode === "destination" ? "green" : "gray";
+
+      $("modeText").textContent =
+        mode === "pickup"
+          ? "Tap the map to set your pickup."
+          : "Tap the map to set your destination.";
+    }
+
+    function setPoint(type, lat, lng) {
+      if (!Number.isFinite(lat) ||
+          !Number.isFinite(lng)) {
+        return;
+      }
+
+      const point = {
+        latitude: lat,
+        longitude: lng
+      };
+
+      if (type === "pickup") {
+        pickup = point;
+
+        if (!pickupMarker) {
+          pickupMarker = L.marker(
+            [lat, lng],
+            { draggable: true }
+          ).addTo(map);
+
+          pickupMarker.on("dragend", () => {
+            const p = pickupMarker.getLatLng();
+            setPoint("pickup", p.lat, p.lng);
+          });
+        } else {
+          pickupMarker.setLatLng([lat, lng]);
         }
 
-        rideStatus.textContent =
-          "Booking failed:\n" + message;
+        pickupMarker.bindPopup("📍 Pickup");
+        $("pickupDisplay").textContent =
+          formatPoint(point);
 
-        return;
+      } else {
+        destination = point;
+
+        if (!destinationMarker) {
+          destinationMarker = L.marker(
+            [lat, lng],
+            { draggable: true }
+          ).addTo(map);
+
+          destinationMarker.on("dragend", () => {
+            const p = destinationMarker.getLatLng();
+            setPoint("destination", p.lat, p.lng);
+          });
+        } else {
+          destinationMarker.setLatLng([lat, lng]);
+        }
+
+        destinationMarker.bindPopup(
+          "🏁 Destination"
+        );
+
+        $("destinationDisplay").textContent =
+          formatPoint(point);
       }
 
-      if (data?.error) {
-
-        rideStatus.textContent =
-          "Booking failed:\n" + data.error;
-
-        return;
+      if (connectionLine) {
+        map.removeLayer(connectionLine);
+        connectionLine = null;
       }
 
-      rideStatus.textContent =
-        "Booking response:\n" +
-        JSON.stringify(data, null, 2);
+      if (pickup && destination) {
+        connectionLine = L.polyline(
+          [
+            [pickup.latitude, pickup.longitude],
+            [
+              destination.latitude,
+              destination.longitude
+            ]
+          ],
+          {
+            color: "#148b47",
+            weight: 3,
+            dashArray: "7, 8"
+          }
+        ).addTo(map);
+      }
 
-    } catch (error) {
-
-      rideStatus.textContent =
-        "Error:\n" + error.message;
-
-    } finally {
-
-      testRideButton.disabled = false;
-
+      $("bookingResult").classList.add("hidden");
+      setStatus("Locations updated. Ready to book.");
     }
-  }
-);
 
-</script>
+    function initMap() {
+      if (map) {
+        setTimeout(() => map.invalidateSize(), 150);
+        return;
+      }
 
+      map = L.map("map").setView(
+        [
+          DEFAULT_PICKUP.latitude,
+          DEFAULT_PICKUP.longitude
+        ],
+        15
+      );
+
+      L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }
+      ).addTo(map);
+
+      map.on("click", event => {
+        setPoint(
+          mode,
+          event.latlng.lat,
+          event.latlng.lng
+        );
+      });
+
+      // Load our previously successful test route.
+      setPoint(
+        "pickup",
+        DEFAULT_PICKUP.latitude,
+        DEFAULT_PICKUP.longitude
+      );
+
+      setPoint(
+        "destination",
+        DEFAULT_DESTINATION.latitude,
+        DEFAULT_DESTINATION.longitude
+      );
+
+      const bounds = L.latLngBounds([
+        [
+          DEFAULT_PICKUP.latitude,
+          DEFAULT_PICKUP.longitude
+        ],
+        [
+          DEFAULT_DESTINATION.latitude,
+          DEFAULT_DESTINATION.longitude
+        ]
+      ]);
+
+      map.fitBounds(bounds.pad(0.35));
+      setMode("pickup");
+
+      setTimeout(() => map.invalidateSize(), 200);
+    }
+
+    // PASSENGER LOGIN
+    $("loginForm").addEventListener(
+      "submit",
+      async event => {
+        event.preventDefault();
+
+        $("loginBtn").disabled = true;
+        $("loginMessage").textContent =
+          "Logging in...";
+
+        try {
+          const { data, error } =
+            await supabase.auth.signInWithPassword({
+              email: $("email").value.trim(),
+              password: $("password").value
+            });
+
+          $("password").value = "";
+
+          if (error) throw error;
+
+          if (data.user.id !== TEST_PASSENGER_ID) {
+            await supabase.auth.signOut();
+            throw new Error(
+              "This prototype is restricted " +
+              "to the test passenger."
+            );
+          }
+
+          $("loginSection").classList.add("hidden");
+          $("appSection").classList.remove("hidden");
+
+          initMap();
+
+        } catch (error) {
+          $("loginMessage").textContent =
+            "Login failed: " + error.message;
+        } finally {
+          $("loginBtn").disabled = false;
+        }
+      }
+    );
+
+    $("logoutBtn").addEventListener(
+      "click",
+      async () => {
+        await supabase.auth.signOut();
+
+        $("appSection").classList.add("hidden");
+        $("loginSection").classList.remove("hidden");
+        $("loginMessage").textContent =
+          "Logged out successfully.";
+        $("bookingResult").classList.add("hidden");
+      }
+    );
+
+    $("pickupMode").addEventListener(
+      "click",
+      () => setMode("pickup")
+    );
+
+    $("destinationMode").addEventListener(
+      "click",
+      () => setMode("destination")
+    );
+
+    // ADDRESS SEARCH
+    // Search only when the user taps Search.
+    // No autocomplete or background searching.
+    $("searchBtn").addEventListener(
+      "click",
+      searchAddress
+    );
+
+    $("searchInput").addEventListener(
+      "keydown",
+      event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          searchAddress();
+        }
+      }
+    );
+
+    async function searchAddress() {
+      const query = $("searchInput").value.trim();
+      const results = $("searchResults");
+
+      if (query.length < 3) {
+        results.textContent =
+          "Enter at least 3 characters.";
+        return;
+      }
+
+      if (searchBusy) return;
+
+      // Limit this browser session to one
+      // search request per second.
+      if (Date.now() - lastSearchAt < 1100) {
+        results.textContent =
+          "Please wait before searching again.";
+        return;
+      }
+
+      searchBusy = true;
+      lastSearchAt = Date.now();
+      $("searchBtn").disabled = true;
+      results.textContent = "Searching...";
+
+      try {
+        const url = new URL(
+          "https://nominatim.openstreetmap.org/search"
+        );
+
+        url.searchParams.set("q", query);
+        url.searchParams.set("format", "jsonv2");
+        url.searchParams.set("limit", "5");
+        url.searchParams.set(
+          "countrycodes",
+          "ph"
+        );
+
+        const response = await fetch(
+          url.toString()
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Search service returned " +
+            response.status
+          );
+        }
+
+        const places = await response.json();
+        results.replaceChildren();
+
+        if (!places.length) {
+          results.textContent =
+            "No matching places found. " +
+            "Try another name or use the map.";
+          return;
+        }
+
+        for (const place of places) {
+          const button =
+            document.createElement("button");
+
+          button.type = "button";
+          button.className = "place";
+          button.textContent = place.display_name;
+
+          button.addEventListener(
+            "click",
+            () => {
+              const lat = Number(place.lat);
+              const lng = Number(place.lon);
+
+              setPoint(mode, lat, lng);
+              map.setView([lat, lng], 17);
+
+              results.replaceChildren();
+              $("searchInput").value =
+                place.display_name;
+            }
+          );
+
+          results.appendChild(button);
+        }
+
+      } catch (error) {
+        results.textContent =
+          "Search failed: " + error.message;
+      } finally {
+        searchBusy = false;
+        $("searchBtn").disabled = false;
+      }
+    }
+
+    // GPS
+    $("gpsBtn").addEventListener(
+      "click",
+      () => {
+        if (!navigator.geolocation) {
+          alert("GPS is not supported.");
+          return;
+        }
+
+        $("gpsBtn").disabled = true;
+        $("searchResults").textContent =
+          "Requesting your location...";
+
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            setPoint("pickup", lat, lng);
+            setMode("destination");
+            map.setView([lat, lng], 17);
+
+            $("searchResults").textContent =
+              "Pickup set from GPS. " +
+              "Now choose your destination.";
+
+            $("gpsBtn").disabled = false;
+          },
+          error => {
+            $("searchResults").textContent =
+              "Could not get GPS: " + error.message;
+
+            $("gpsBtn").disabled = false;
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+          }
+        );
+      }
+    );
+
+    // BOOKING
+    $("bookBtn").addEventListener(
+      "click",
+      async () => {
+        if (bookingBusy) return;
+
+        if (!pickup || !destination) {
+          setStatus(
+            "Select pickup and destination first."
+          );
+          return;
+        }
+
+        const confirmed = confirm(
+          "Create a REAL test ride record " +
+          "using these locations?\n\n" +
+          "Pickup: " + formatPoint(pickup) +
+          "\nDestination: " +
+          formatPoint(destination) +
+          "\n\nNo driver will be dispatched " +
+          "by this prototype."
+        );
+
+        if (!confirmed) return;
+
+        bookingBusy = true;
+        $("bookBtn").disabled = true;
+        $("bookingResult").classList.add("hidden");
+
+        setStatus(
+          "Calculating road route and " +
+          "creating your booking..."
+        );
+
+        try {
+          const {
+            data: { session },
+            error: sessionError
+          } = await supabase.auth.getSession();
+
+          if (sessionError || !session) {
+            throw new Error(
+              "Session expired. Log in again."
+            );
+          }
+
+          const { data, error } =
+            await supabase.functions.invoke(
+              FUNCTION_NAME,
+              {
+                headers: {
+                  Authorization:
+                    "Bearer " +
+                    session.access_token
+                },
+                body: {
+                  pickup: {
+                    latitude: pickup.latitude,
+                    longitude: pickup.longitude
+                  },
+                  destination: {
+                    latitude: destination.latitude,
+                    longitude:
+                      destination.longitude
+                  },
+                  fare_rule_id:
+                    TEST_FARE_RULE_ID
+                }
+              }
+            );
+
+          if (error) {
+            let message = error.message;
+
+            if (error.context) {
+              try {
+                const details =
+                  await error.context.json();
+
+                message =
+                  details.error ||
+                  JSON.stringify(details);
+              } catch (_) {
+                // Keep the original error message.
+              }
+            }
+
+            throw new Error(message);
+          }
+
+          if (!data || data.success !== true) {
+            throw new Error(
+              data?.error ||
+              "Unexpected booking response."
+            );
+          }
+
+          setStatus("Booking created successfully!");
+
+          const result = $("bookingResult");
+          result.replaceChildren();
+
+          const heading =
+            document.createElement("strong");
+          heading.textContent =
+            "✅ Test Booking Confirmed";
+
+          result.appendChild(heading);
+
+          const fields = [
+            ["Ride ID", data.ride_id],
+            ["Status", data.status],
+            [
+              "Road distance",
+              data.estimated_distance_km + " km"
+            ],
+            [
+              "Travel time",
+              data.estimated_duration_minutes +
+                " minutes"
+            ],
+            [
+              "Estimated fare",
+              "₱" +
+                Number(
+                  data.estimated_fare
+                ).toFixed(2)
+            ]
+          ];
+
+          for (const [label, value] of fields) {
+            const line =
+              document.createElement("div");
+
+            line.textContent =
+              label + ": " + value;
+
+            result.appendChild(line);
+          }
+
+          result.classList.remove("hidden");
+
+        } catch (error) {
+          setStatus(
+            "Booking failed: " + error.message
+          );
+        } finally {
+          bookingBusy = false;
+          $("bookBtn").disabled = false;
+        }
+      }
+    );
+  </script>
 </body>
 </html>
