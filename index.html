@@ -156,8 +156,88 @@ logoutButton.addEventListener("click", async () => {
   await supabase.auth.signOut();
   form.hidden = false;
   logoutButton.hidden = true;
+  testRideButton.hidden = true;
+  testRideButton.hidden = false;
   status.textContent = "Logged out";
 });
+  
+const testRideButton =
+  document.getElementById("testRideButton");
+
+const rideStatus =
+  document.getElementById("rideStatus");
+
+testRideButton.addEventListener("click", async () => {
+  const confirmed = confirm(
+    "Create ONE test ride using sample locations? " +
+    "This will save a test booking in Supabase."
+  );
+
+  if (!confirmed) return;
+
+  testRideButton.disabled = true;
+  rideStatus.textContent = "Calculating road route...";
+
+  try {
+    const { data: sessionData } =
+      await supabase.auth.getSession();
+
+    if (!sessionData.session) {
+      rideStatus.textContent =
+        "Session expired. Please log in again.";
+      return;
+    }
+
+    const { data, error } =
+      await supabase.functions.invoke(
+        "create-habal-ride",
+        {
+          body: {
+            pickup: {
+              latitude: 8.4400,
+              longitude: 123.3400
+            },
+            destination: {
+              latitude: 8.4500,
+              longitude: 123.3500
+            },
+            fare_rule_id:
+              "42870dda-fc66-42c7-92fc-d1a73f966196"
+          }
+        }
+      );
+
+    if (error) {
+      let details = error.message;
+      if (error.context) {
+        try {
+          details = JSON.stringify(
+            await error.context.json()
+          );
+        } catch {}
+      }
+      rideStatus.textContent =
+        "Booking test failed: " + details;
+      return;
+    }
+
+    if (data?.error) {
+      rideStatus.textContent =
+        "Booking test failed: " + data.error;
+      return;
+    }
+
+    rideStatus.textContent =
+      "Booking response: " + JSON.stringify(data);
+
+  } catch (error) {
+    rideStatus.textContent =
+      "Error: " + error.message;
+  } finally {
+    testRideButton.disabled = false;
+  }
+});
+  
 </script>
 </body>
 </html>
