@@ -4,8 +4,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Habal Passenger Login</title>
+<title>Habal Passenger Test</title>
+
 <style>
+  * {
+    box-sizing: border-box;
+  }
+
   body {
     font-family: Arial, sans-serif;
     background: #eaf8ee;
@@ -13,28 +18,34 @@
     padding: 35px 20px;
     margin: 0;
   }
+
   h1 {
     color: #148b43;
     font-size: 48px;
     margin-bottom: 5px;
   }
+
   .card {
     background: white;
     padding: 25px;
     border-radius: 18px;
     box-shadow: 0 4px 15px #0001;
-    max-width: 400px;
+    max-width: 420px;
     margin: 30px auto;
   }
+
   input, button {
     width: 100%;
-    box-sizing: border-box;
     padding: 15px;
     margin-top: 12px;
     border-radius: 10px;
     font-size: 16px;
   }
-  input { border: 1px solid #ccc; }
+
+  input {
+    border: 1px solid #ccc;
+  }
+
   button {
     background: #148b43;
     color: white;
@@ -42,59 +53,128 @@
     font-weight: bold;
     cursor: pointer;
   }
-  button:disabled { opacity: .6; }
-  #status { overflow-wrap: anywhere; }
+
+  button:disabled {
+    opacity: 0.6;
+  }
+
+  .secondary {
+    background: #555;
+  }
+
+  .status {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
 </style>
 </head>
+
 <body>
 
 <h1>🏍️ Habal</h1>
 <p>Habal na!</p>
 
 <div class="card">
+
   <h2>Passenger Login</h2>
 
   <form id="loginForm">
-    <input id="email" type="email"
-           placeholder="Email" required
-           autocomplete="username">
 
-    <input id="password" type="password"
-           placeholder="Password" required
-           autocomplete="current-password">
+    <input
+      id="email"
+      type="email"
+      placeholder="Email"
+      autocomplete="username"
+      required
+    >
+
+    <input
+      id="password"
+      type="password"
+      placeholder="Password"
+      autocomplete="current-password"
+      required
+    >
 
     <button id="loginButton" type="submit">
       Log In
     </button>
+
   </form>
 
-  <button id="logoutButton" type="button" hidden>
-    Log Out
-  </button>
+  <p id="status" class="status" role="status">
+    Not logged in
+  </p>
 
-  <p id="status" role="status">Not logged in</p>
-  
-<button id="testRideButton" type="button" hidden>
-  🏍️ Test Ride Booking
-</button>
-<p id="rideStatus" role="status"></p>
+  <div id="passengerPanel" hidden>
+
+    <h3>Welcome, Passenger!</h3>
+
+    <p>Test route: Katipunan area</p>
+
+    <button id="testRideButton" type="button">
+      🏍️ Test Ride Booking
+    </button>
+
+    <p id="rideStatus"
+       class="status"
+       role="status"></p>
+
+    <button
+      id="logoutButton"
+      type="button"
+      class="secondary">
+      Log Out
+    </button>
+
+  </div>
 
 </div>
-  
+
 <script type="module">
+
 import { createClient } from
   "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL =
   "https://ktjpvzdslzlctlmgsnst.supabase.co";
 
+// Public client key only.
+// Never use a secret or service_role key here.
 const SUPABASE_KEY =
-  "sb_publishable_dM4aZBmzSr5aJ7-Z03Yuzg_bTEWbngc";
+  "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
 
-const status = document.getElementById("status");
-const form = document.getElementById("loginForm");
-const loginButton = document.getElementById("loginButton");
-const logoutButton = document.getElementById("logoutButton");
+const TEST_PASSENGER_ID =
+  "a142d81d-24fb-4d5d-a26d-8b47eacc96c4";
+
+const TEST_FARE_RULE_ID =
+  "42870dda-fc66-42c7-92fc-d1a73f966196";
+
+const loginForm =
+  document.getElementById("loginForm");
+
+const loginButton =
+  document.getElementById("loginButton");
+
+const passengerPanel =
+  document.getElementById("passengerPanel");
+
+const testRideButton =
+  document.getElementById("testRideButton");
+
+const logoutButton =
+  document.getElementById("logoutButton");
+
+const statusElement =
+  document.getElementById("status");
+
+const rideStatus =
+  document.getElementById("rideStatus");
 
 const supabase = createClient(
   SUPABASE_URL,
@@ -107,137 +187,215 @@ const supabase = createClient(
   }
 );
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  loginButton.disabled = true;
-  status.textContent = "Logging in...";
+function setLoggedIn(loggedIn) {
+  loginForm.hidden = loggedIn;
+  passengerPanel.hidden = !loggedIn;
 
-  try {
-    const email =
-      document.getElementById("email").value.trim();
-
-    const password =
-      document.getElementById("password").value;
-
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-    document.getElementById("password").value = "";
-
-    if (error) {
-      status.textContent = "Login failed: " + error.message;
-      return;
-    }
-
-    if (data.user.id !==
-        "a142d81d-24fb-4d5d-a26d-8b47eacc96c4") {
-      await supabase.auth.signOut();
-      status.textContent =
-        "This is not the expected test passenger.";
-      return;
-    }
-
-    status.textContent = "Login successful!";
-    form.hidden = true;
-    logoutButton.hidden = false;
-
-  } catch (error) {
-    status.textContent =
-      "Connection error: " + error.message;
-  } finally {
-    loginButton.disabled = false;
-  }
-});
-
-logoutButton.addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  form.hidden = false;
-  logoutButton.hidden = true;
-  testRideButton.hidden = true;
-  testRideButton.hidden = false;
-  status.textContent = "Logged out";
-});
-  
-const testRideButton =
-  document.getElementById("testRideButton");
-
-const rideStatus =
-  document.getElementById("rideStatus");
-
-testRideButton.addEventListener("click", async () => {
-  const confirmed = confirm(
-    "Create ONE test ride using sample locations? " +
-    "This will save a test booking in Supabase."
-  );
-
-  if (!confirmed) return;
-
-  testRideButton.disabled = true;
-  rideStatus.textContent = "Calculating road route...";
-
-  try {
-    const { data: sessionData } =
-      await supabase.auth.getSession();
-
-    if (!sessionData.session) {
-      rideStatus.textContent =
-        "Session expired. Please log in again.";
-      return;
-    }
-
-    const { data, error } =
-      await supabase.functions.invoke(
-        "create-habal-ride",
-        {
-          body: {
-            pickup: {
-              latitude: 8.4400,
-              longitude: 123.3400
-            },
-            destination: {
-              latitude: 8.4500,
-              longitude: 123.3500
-            },
-            fare_rule_id:
-              "42870dda-fc66-42c7-92fc-d1a73f966196"
-          }
-        }
-      );
-
-    if (error) {
-      let details = error.message;
-      if (error.context) {
-        try {
-          details = JSON.stringify(
-            await error.context.json()
-          );
-        } catch {}
-      }
-      rideStatus.textContent =
-        "Booking test failed: " + details;
-      return;
-    }
-
-    if (data?.error) {
-      rideStatus.textContent =
-        "Booking test failed: " + data.error;
-      return;
-    }
-
-    rideStatus.textContent =
-      "Booking response: " + JSON.stringify(data);
-
-  } catch (error) {
-    rideStatus.textContent =
-      "Error: " + error.message;
-  } finally {
+  if (!loggedIn) {
+    rideStatus.textContent = "";
     testRideButton.disabled = false;
   }
-});
-  
+}
+
+setLoggedIn(false);
+
+// PASSENGER LOGIN
+loginForm.addEventListener(
+  "submit",
+  async (event) => {
+
+    event.preventDefault();
+
+    loginButton.disabled = true;
+    statusElement.textContent = "Logging in...";
+
+    try {
+
+      const email =
+        document.getElementById("email")
+          .value.trim();
+
+      const passwordInput =
+        document.getElementById("password");
+
+      const password = passwordInput.value;
+
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+      passwordInput.value = "";
+
+      if (error) {
+        statusElement.textContent =
+          "Login failed: " + error.message;
+        return;
+      }
+
+      if (data.user.id !== TEST_PASSENGER_ID) {
+        await supabase.auth.signOut();
+
+        statusElement.textContent =
+          "This is not the expected test passenger.";
+
+        return;
+      }
+
+      setLoggedIn(true);
+
+      statusElement.textContent =
+        "Login successful!";
+
+    } catch (error) {
+
+      statusElement.textContent =
+        "Connection error: " + error.message;
+
+    } finally {
+
+      loginButton.disabled = false;
+
+    }
+  }
+);
+
+// LOG OUT
+logoutButton.addEventListener(
+  "click",
+  async () => {
+
+    logoutButton.disabled = true;
+
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      setLoggedIn(false);
+
+      statusElement.textContent =
+        "Logged out";
+
+      logoutButton.disabled = false;
+    }
+  }
+);
+
+// TEST BOOKING
+testRideButton.addEventListener(
+  "click",
+  async () => {
+
+    const confirmed = confirm(
+      "Create ONE test ride?\n\n" +
+      "This saves a test booking in Supabase. " +
+      "No payment will be collected."
+    );
+
+    if (!confirmed) return;
+
+    testRideButton.disabled = true;
+
+    rideStatus.textContent =
+      "Calculating road distance...";
+
+    try {
+
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+
+        rideStatus.textContent =
+          "Session expired. Log in again.";
+
+        return;
+      }
+
+      const {
+        data: userData,
+        error: userError
+      } = await supabase.auth.getUser();
+
+      if (
+        userError ||
+        userData?.user?.id !== TEST_PASSENGER_ID
+      ) {
+
+        rideStatus.textContent =
+          "Passenger authentication failed.";
+
+        return;
+      }
+
+      const { data, error } =
+        await supabase.functions.invoke(
+          "create-habal-ride",
+          {
+            body: {
+              pickup: {
+                latitude: 8.4400,
+                longitude: 123.3400
+              },
+              destination: {
+                latitude: 8.4500,
+                longitude: 123.3500
+              },
+              fare_rule_id:
+                TEST_FARE_RULE_ID
+            }
+          }
+        );
+
+      if (error) {
+
+        let message = error.message;
+
+        if (error.context) {
+          try {
+            const response =
+              await error.context.json();
+
+            message = JSON.stringify(response);
+          } catch {
+            // Keep the original error message.
+          }
+        }
+
+        rideStatus.textContent =
+          "Booking failed:\n" + message;
+
+        return;
+      }
+
+      if (data?.error) {
+
+        rideStatus.textContent =
+          "Booking failed:\n" + data.error;
+
+        return;
+      }
+
+      rideStatus.textContent =
+        "Booking response:\n" +
+        JSON.stringify(data, null, 2);
+
+    } catch (error) {
+
+      rideStatus.textContent =
+        "Error:\n" + error.message;
+
+    } finally {
+
+      testRideButton.disabled = false;
+
+    }
+  }
+);
+
 </script>
+
 </body>
 </html>
